@@ -60,6 +60,9 @@ var (
 			"${0} fed ${1}",
 			"${0} shoved some food down ${1}'s throat",
 		}, siteNekosLife},
+		"poke": {"Poke", "poked", []string{
+			"${0} poked ${1}",
+		}, siteNekosLife},
 	}
 )
 
