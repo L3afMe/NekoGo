@@ -1,0 +1,128 @@
+linters-settings:
+  depguard:
+    list-type: blacklist
+    include-go-root: true
+    packages:
+      - log
+      - fmt
+    packages-with-error-message:
+      - log: "Logging is only allowed from go-logging"
+      - fmt: "Formatting is only allowed from go-format"
+  dupl:
+    threshold: 100
+  funlen:
+    lines: 100
+    statements: 75
+  gci:
+    local-prefixes: github.com/golangci/golangci-lint
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+    disabled-checks:
+      - dupImport
+      - octalLiteral
+  gocyclo:
+    min-complexity: 15
+  goimports:
+    local-prefixes: github.com/golangci/golangci-lint
+  golint:
+    min-confidence: 0
+  govet:
+    check-shadowing: false
+    settings:
+      printf:
+        funcs:
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
+  lll:
+    line-length: 140
+  maligned:
+    suggest-new: true
+  misspell:
+    locale: US
+  nolintlint:
+    allow-leading-space: false
+    allow-unused: false 
+    require-explanation: true
+    require-specific: false
+linters:
+  disable-all: true
+  enable:
+    - bodyclose
+    - deadcode
+    - depguard
+    - dogsled
+    - dupl
+    - errcheck
+    - exhaustive
+    - funlen
+    - gochecknoinits
+    - goconst
+    - gocritic
+    - gocyclo
+    - gofmt
+    - goimports
+    - golint
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - interfacer
+    - lll
+    - misspell
+    - nakedret
+    - noctx
+    - nolintlint
+    - rowserrcheck
+    - scopelint
+    - staticcheck
+    - structcheck
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - varcheck
+    - whitespace
+  # don't enable:
+  # - asciicheck
+  # - gochecknoglobals
+  # - gocognit
+  # - godot
+  # - godox
+  # - goerr113
+  # - maligned
+  # - nestif
+  # - prealloc
+  # - testpackage
+  # - wsl
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gomnd
+    - linters:
+        - gocritic
+      text: "unnecessaryDefer:"
+    - path: pkg/golinters/scopelint.go
+      text: 'directive `//nolint:interfacer` is unused for linter interfacer'
+run:
+  skip-dirs:
+    - test/testdata_etc
+    - internal/cache
+    - internal/renameio
+    - internal/robustio
+service:
+  golangci-lint-version: 1.29
+  prepare:
+    - echo "Nothing needed"

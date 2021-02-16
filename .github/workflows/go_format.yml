@@ -1,0 +1,19 @@
+name: Go Format
+
+on:
+  pull_request:
+    branches:
+    - '**'
+
+jobs:
+  format:
+    name: Format Code
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+      with:
+        fetch-depth: 0
+    - name: Golang Formatter
+      uses: sladyn98/auto-go-format@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
