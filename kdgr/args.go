@@ -162,7 +162,7 @@ func ParseArgs(content string, rt *Route) (Args, *ArgError) {
 			argWord = "argument"
 		}
 
-		return nil, &ArgError{-1, format.Formatp("Minimum of `${}` ${}, got `${}`", minArgs, argWord, len(args))}
+		return nil, &ArgError{len(args), format.Formatp("Minimum of `${}` ${}, got `${}`", minArgs, argWord, len(args))}
 	}
 
 	if maxArgs < len(args) {
@@ -171,7 +171,7 @@ func ParseArgs(content string, rt *Route) (Args, *ArgError) {
 			argWord = "argument"
 		}
 
-		return nil, &ArgError{-1, format.Formatp("Maximum of `${}` ${}, got `${}`", maxArgs, argWord, len(args))}
+		return nil, &ArgError{maxArgs - 1, format.Formatp("Maximum of `${}` ${}, got `${}`", maxArgs, argWord, len(args))}
 	}
 
 	for i, arg := range args {

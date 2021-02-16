@@ -49,7 +49,12 @@ type Message struct {
 }
 
 func NewMessage(title string) *Message {
-	return &Message{title: title, color: 16429549, header: &messageHeader{}, footer: &messageFooter{}}
+	return &Message{
+		title:  title,
+		color:  12424185,
+		header: &messageHeader{},
+		footer: &messageFooter{},
+	}
 }
 
 func (msg *Message) ToText() (content string) {
@@ -83,7 +88,13 @@ func (msg *Message) ToEmbed() *discordgo.MessageEmbed {
 }
 
 func NewError(description string) *Message {
-	return &Message{title: "Error", description: description, color: 16429549, header: &messageHeader{}, footer: &messageFooter{}}
+	return &Message{
+		title:       "Error",
+		description: description,
+		color:       16733525,
+		header:      &messageHeader{},
+		footer:      &messageFooter{},
+	}
 }
 
 func (msg *Message) Desc(description string) *Message {

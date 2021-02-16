@@ -16,11 +16,11 @@ func loadConfigCommands(r *kdgr.Route) {
 		}
 
 		oldPrefix := c.Route.Config.Prefix
-		c.Route.Config.Prefix = c.Args.All(" ")
+		c.Route.Config.Prefix = c.Args.All("")
 		c.Route.Config.Save()
 
 		c.ReplyAutoHandle(kdgr.NewMessage("Prefix").
-			Desc(format.Formatp("Old prefix: ${}\nNew prefix: `${}`",
+			Desc(format.Formatp("Old prefix: `${}`\nNew prefix: `${}`",
 				oldPrefix, c.Route.Config.Prefix)))
 	}).
 		Desc("Set the prefix to execute commands."+
