@@ -17,19 +17,19 @@
 ### NekoGo is currently in pre-release. This means there may be bugs, unexpected behaviour, and features that don't work or that get removed.
 
 ## Features
+#### Features with a ~~strikethrough~~ aren't currently implemented and will be added in the coming future
 - Written in Golang so it is much faster than anything in Python/JavaScript (Which most selfbots are in)
 - Thoroughly documented commands. Every command, subcommand, subsubcommand, etc has it's own help menu with examples
 - Aliases galore. Too lazy to type the whole command name? Check help and there will likely be a much shorter alias
 - Everything is easily configurable through chat so no need to mess with setting up config files. Setup your token the first run and you never have to worry about it again
-- Iterpeters for several languages including JavaScript, Python, Brainfuck and more
 - Interaction gifs like `kiss`, `slap`, `hug`, `poke`, etc
-- Image generation using a mentioned user's profile picture
-- Moderation commands like `kick`, `ban`, `softban`, `purge`, etc
-- Mention and keyword logging as well as message sniper
-- Information commands like `serverinfo`, `userinfo`, `roleinfo`, `channelinfo`
-- Search words with `urbandictionary`, `wikipedia`, `dictionary`
-- Steal emotes in chat and add them to your own server with `emotestealer`
-- Automatically switch your avatar, name, and tag (if you have Nitro) at a certain interval
+- ~~Iterpeters for several languages including JavaScript, Python, Brainfuck and more~~
+- ~~Image generation using a mentioned user's profile picture~~
+- ~~Mention and keyword logging as well as message sniper~~
+- ~~Information commands like `serverinfo`, `userinfo`, `roleinfo`, `channelinfo`~~
+- ~~Search words with `urbandictionary`, `wikipedia`, `dictionary`~~
+- ~~Steal emotes in chat and add them to your own server with `emotestealer`~~
+- ~~Automatically switch your avatar, name, and tag (if you have Nitro) at a certain interval~~
 
 ## Commands
 A list of commands can be found [in the Wiki](https://github.com/L3afMe/NekoGo/wiki/Commands). Please note this may not be updated, to get a list of all current commands, check the help menu in Discord.
