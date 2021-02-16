@@ -45,6 +45,8 @@ func (r *Route) OnMatch(name string, matcher func(string) bool, handler HandlerF
 		Availability: RouteBoth,
 		Separator:    " ",
 		Config:       r.Config,
+		ExecBefore:   r.ExecBefore,
+		ExecAfter:    r.ExecAfter,
 	}
 
 	_ = r.AddRoute(rt)
@@ -94,11 +96,14 @@ func (r *Route) Group(fn func(r *Route)) *Route {
 	rt := New(r.Config)
 	fn(rt)
 	for _, v := range rt.Routes {
-		r.AddRoute(v)
+		if err := r.AddRoute(v); err != nil {
+			log.Panic(format.Formatp("Unable to add route: ${}", err))
+		}
 	}
 	return r
 }
 
+//nolint:gocyclo // Need to update this later to remove complexity
 func (r *Route) FindAndExecute(s *discordgo.Session, prefix, botID string, m *discordgo.Message) {
 	var pf string
 
@@ -130,14 +135,14 @@ func (r *Route) FindAndExecute(s *discordgo.Session, prefix, botID string, m *di
 			args = ParseArgsNoCheck(strArgs, rt)
 			context := NewContext(s, m, args, rt)
 
-			if r.ExecBefore(context) {
+			if rt.ExecBefore(context) {
 				context.ReplyInvalidArg(err.Index, err.Reason)
-				r.ExecAfter(context)
+				rt.ExecAfter(context)
 			}
 		} else {
 			context := NewContext(s, m, args, rt)
 
-			if r.ExecBefore(context) {
+			if rt.ExecBefore(context) {
 				if rt.Availability == RouteGuild && m.GuildID == "" ||
 					rt.Availability == RouteDM && m.GuildID != "" {
 					context.ReplyAutoHandle(NewError(format.
@@ -146,7 +151,7 @@ func (r *Route) FindAndExecute(s *discordgo.Session, prefix, botID string, m *di
 					rt.Handler(context)
 				}
 
-				r.ExecAfter(context)
+				rt.ExecAfter(context)
 			}
 		}
 	}

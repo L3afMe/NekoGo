@@ -46,11 +46,11 @@ type Route struct {
 	Config       *config.Config
 }
 
-func New(config *config.Config) *Route {
+func New(conf *config.Config) *Route {
 	return &Route{
 		Routes:   []*Route{},
 		Category: "",
-		Config:   config,
+		Config:   conf,
 	}
 }
 
@@ -81,7 +81,7 @@ func (r *Route) Example(examples ...string) *Route {
 
 func (r *Route) Perms(permissions ...int) *Route {
 	for _, perm := range permissions {
-		r.Permissions = r.Permissions | perm
+		r.Permissions |= perm
 	}
 
 	return r

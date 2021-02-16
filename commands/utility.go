@@ -73,7 +73,7 @@ func utlPing(ctx *kdgr.Context) {
 	content := format.Formatp("WS Delay: ${}ms", delay)
 
 	start := time.Now()
-	body, err := utils.GetDiscord(ctx.Ses.Token, "users/@me", nil)
+	_, err := utils.GetDiscord(ctx.Ses.Token, "users/@me", nil)
 	end := time.Now()
 	delay = strconv.Itoa(int(end.Sub(start).Milliseconds()))
 	if err != nil {
@@ -84,7 +84,7 @@ func utlPing(ctx *kdgr.Context) {
 	content += format.Formatp("\nGET Delay: ${}ms", delay)
 
 	start = time.Now()
-	body, err = utils.PostDiscord(ctx.Ses.Token,
+	body, err := utils.PostDiscord(ctx.Ses.Token,
 		format.Formatp("channels/${}/messages", ctx.Msg.ChannelID),
 		[]byte("{ \"content\": \"Loading ping...\" }"), nil)
 	end = time.Now()

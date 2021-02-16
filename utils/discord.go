@@ -2,7 +2,7 @@ package utils
 
 import "github.com/valyala/fasthttp"
 
-func PostDiscord(tkn string, path string, jsonBody []byte, setHeaders func(*fasthttp.RequestHeader)) (body string, err error) {
+func PostDiscord(tkn, path string, jsonBody []byte, setHeaders func(*fasthttp.RequestHeader)) (body string, err error) {
 	req := fasthttp.AcquireRequest()
 	resp := fasthttp.AcquireResponse()
 
@@ -25,7 +25,7 @@ func PostDiscord(tkn string, path string, jsonBody []byte, setHeaders func(*fast
 	return
 }
 
-func GetDiscord(tkn string, path string, setHeaders func(*fasthttp.RequestHeader)) (body string, err error) {
+func GetDiscord(tkn, path string, setHeaders func(*fasthttp.RequestHeader)) (body string, err error) {
 	req := fasthttp.AcquireRequest()
 	resp := fasthttp.AcquireResponse()
 

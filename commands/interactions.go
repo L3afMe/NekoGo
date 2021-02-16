@@ -75,7 +75,7 @@ func interaction(c *kdgr.Context) {
 
 	inter := interactionsMap[c.Route.Name]
 	var url string
-	switch inter.Site {
+	switch inter.Site { //nolint:gocritic // More will come in future
 	case siteNekosLife:
 		{
 			req := fasthttp.AcquireRequest()
@@ -105,6 +105,7 @@ func interaction(c *kdgr.Context) {
 	}
 
 	msg := kdgr.NewMessage(inter.Noun).
+		//nolint:gosec // No need to use crypto/rand
 		Desc(format.Formatp(inter.Responses[rand.Intn(len(inter.Responses))], c.Msg.Author.Mention(), user.Mention())).
 		Image(url)
 

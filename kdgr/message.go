@@ -86,34 +86,34 @@ func NewError(description string) *Message {
 	return &Message{title: "Error", description: description, color: 16429549, header: &messageHeader{}, footer: &messageFooter{}}
 }
 
-func (m *Message) Desc(description string) *Message {
-	m.description = description
-	return m
+func (msg *Message) Desc(description string) *Message {
+	msg.description = description
+	return msg
 }
 
-func (m *Message) Thumbnail(thumbnail string) *Message {
-	m.thumbnailURL = thumbnail
-	return m
+func (msg *Message) Thumbnail(thumbnail string) *Message {
+	msg.thumbnailURL = thumbnail
+	return msg
 }
 
-func (m *Message) Image(image string) *Message {
-	m.imageURL = image
-	return m
+func (msg *Message) Image(image string) *Message {
+	msg.imageURL = image
+	return msg
 }
 
-func (m *Message) AddField(name, value string, inline bool) *Message {
-	m.fields = append(m.fields, &messageField{name, value, inline})
-	return m
+func (msg *Message) AddField(name, value string, inline bool) *Message {
+	msg.fields = append(msg.fields, &messageField{name, value, inline})
+	return msg
 }
 
-func (m *Message) Header(name, url, imageURL string) *Message {
-	m.header = &messageHeader{name, url, imageURL}
-	return m
+func (msg *Message) Header(name, url, imageURL string) *Message {
+	msg.header = &messageHeader{name, url, imageURL}
+	return msg
 }
 
-func (m *Message) Footer(name, imageURL string) *Message {
-	m.footer = &messageFooter{name, imageURL}
-	return m
+func (msg *Message) Footer(name, imageURL string) *Message {
+	msg.footer = &messageFooter{name, imageURL}
+	return msg
 }
 
 func (c *Context) EditAuto(oldMsg *discordgo.Message, msg *Message) (*discordgo.Message, error) {

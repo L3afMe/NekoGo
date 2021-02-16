@@ -22,7 +22,6 @@ func loadConfigCommands(r *kdgr.Route) {
 		c.ReplyAutoHandle(kdgr.NewMessage("Prefix").
 			Desc(format.Formatp("Old prefix: ${}\nNew prefix: `${}`",
 				oldPrefix, c.Route.Config.Prefix)))
-
 	}).
 		Desc("Set the prefix to execute commands."+
 			"If no args are given then the current prefix will be displayed").
