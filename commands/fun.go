@@ -2,12 +2,46 @@ package commands
 
 import (
 	"L3afMe/Krul/kdgr"
+	"encoding/json"
 	"strconv"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/sirkon/go-format"
+	"github.com/valyala/fasthttp"
 )
+
+type neko8BallResponse struct {
+	URL      string `json:"url"`
+	Response string `json:"response"`
+}
+
+func fun8Ball(c *kdgr.Context) {
+	req := fasthttp.AcquireRequest()
+	resp := fasthttp.AcquireResponse()
+
+	req.SetRequestURIBytes([]byte("https://nekos.life/api/v2/8ball"))
+	req.Header.SetMethodBytes([]byte("GET"))
+
+	err := fasthttp.Do(req, resp)
+	if err != nil {
+		c.ReplyAutoHandle(kdgr.NewError(format.Formatp("Unable to get image: ${}", err)))
+	}
+	bodyStr := resp.Body()
+
+	fasthttp.ReleaseResponse(resp)
+	var res *neko8BallResponse
+	err = json.Unmarshal(bodyStr, &res)
+	if err != nil {
+		c.ReplyAutoHandle(kdgr.NewError(format.Formatp("Unable to unmarshal response: ${}", err)))
+	}
+
+	msg := kdgr.NewMessage("8 Ball").
+		Desc(format.Formatp("You ask \"${}\" and the 8ball responds with \"${}\"", c.Args.All(" "), res.Response)).
+		Thumbnail(res.URL)
+
+	c.ReplyAutoHandle(msg)
+}
 
 func funDick(ctx *kdgr.Context) {
 	var usr *discordgo.User
@@ -71,6 +105,11 @@ func funShip(ctx *kdgr.Context) {
 }
 
 func loadFunCommands(r *kdgr.Route) {
+	r.On("8ball", fun8Ball).
+		Desc("Ask the magic 8ball a question").
+		Example("Should I get out of bed?").
+		Arg("question...", "The question to ask the 8ball", false, kdgr.RouteArgString)
+
 	r.On("dick", funDick).
 		Desc("Check the size of a user").
 		Example("@l3af#0001").
