@@ -63,11 +63,10 @@ func funDick(ctx *kdgr.Context) {
 	}
 
 	size := ((usrID / 75) % 14) + 4
-	ctx.Log.Info(usrID, size)
 	header := format.Formatp("${} has a ${}\" dick", usr.Mention(), size)
 	dick := format.Formatp("8${}D", strings.Repeat("=", size))
 
-	ctx.ReplyAutoHandle(kdgr.NewMessage("Compatibility").Desc(header + "\n" + dick))
+	ctx.ReplyAutoHandle(kdgr.NewMessage("Dick").Desc(header + "\n" + dick))
 }
 
 func funShip(ctx *kdgr.Context) {
