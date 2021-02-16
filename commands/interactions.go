@@ -55,6 +55,10 @@ var (
 		"tickle": {"Tickle", "tickle", []string{
 			"${0} tickled ${1}",
 		}, siteNekosLife},
+		"pat": {"Pat", "pat", []string{
+			"${0} patted ${1}",
+			"${0} gave ${1} some head pats",
+		}, siteNekosLife},
 		"feed": {"Feed", "feed", []string{
 			"${0} fed ${1} some food",
 			"${0} fed ${1}",
@@ -105,7 +109,6 @@ func interaction(c *kdgr.Context) {
 	}
 
 	msg := kdgr.NewMessage(inter.Noun).
-		//nolint:gosec // No need to use crypto/rand
 		Desc(format.Formatp(inter.Responses[rand.Intn(len(inter.Responses))], c.Msg.Author.Mention(), user.Mention())).
 		Image(url)
 
