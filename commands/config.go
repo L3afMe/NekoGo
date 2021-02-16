@@ -30,7 +30,9 @@ func loadConfigCommands(r *kdgr.Route) {
 }
 
 func LoadConfig(r *kdgr.Route) {
-	r.Cat("Config")
+	r.Group(func(r *kdgr.Route) {
+		r.Cat("Config")
 
-	loadConfigCommands(r)
+		loadConfigCommands(r)
+	})
 }

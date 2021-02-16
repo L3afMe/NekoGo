@@ -116,11 +116,13 @@ func interaction(c *kdgr.Context) {
 }
 
 func LoadInteractions(r *kdgr.Route) {
-	r.Cat("Interactions")
+	r.Group(func(r *kdgr.Route) {
+		r.Cat("Interactions")
 
-	for name, inter := range interactionsMap {
-		r.On(name, interaction).
-			Desc(format.Formatp("${} a user", inter.Noun)).
-			Arg("user", format.Formatp("The user to ${}", strings.ToLower(inter.Noun)), true, kdgr.RouteArgUser)
-	}
+		for name, inter := range interactionsMap {
+			r.On(name, interaction).
+				Desc(format.Formatp("${} a user", inter.Noun)).
+				Arg("user", format.Formatp("The user to ${}", strings.ToLower(inter.Noun)), true, kdgr.RouteArgUser)
+		}
+	})
 }

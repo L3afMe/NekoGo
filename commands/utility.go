@@ -286,7 +286,9 @@ func loadUtilityCommands(r *kdgr.Route) {
 }
 
 func LoadUtility(r *kdgr.Route) {
-	r.Cat("Utility")
+	r.Group(func(r *kdgr.Route) {
+		r.Cat("Utility")
 
-	loadUtilityCommands(r)
+		loadUtilityCommands(r)
+	})
 }

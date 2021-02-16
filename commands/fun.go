@@ -123,7 +123,9 @@ func loadFunCommands(r *kdgr.Route) {
 }
 
 func LoadFun(r *kdgr.Route) {
-	r.Cat("Fun")
+	r.Group(func(r *kdgr.Route) {
+		r.Cat("Fun")
 
-	loadFunCommands(r)
+		loadFunCommands(r)
+	})
 }

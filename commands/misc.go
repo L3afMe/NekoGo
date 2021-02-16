@@ -65,6 +65,12 @@ func mscUsages(c *kdgr.Context) {
 func loadMiscCommands(r *kdgr.Route) {
 	r.On("usages", mscUsages).
 		Desc("Display how often commands are used")
+
+	r.On("help", kdgr.SendHelp).
+		Alias("?").
+		Desc("Displays the help menu.\n**Keys**\n`<>` - Required\n`[]` - Optional\n`...` - More than one allowed").
+		Arg("categery/command...", "Category or command to diplay help about", false, kdgr.RouteArgString).
+		Example("tokeninfo billing", "utility")
 }
 
 func LoadMisc(r *kdgr.Route) {

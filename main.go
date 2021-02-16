@@ -99,14 +99,6 @@ func main() {
 	commands.LoadMisc(router)
 	commands.LoadUtility(router)
 
-	router.
-		On("help", kdgr.SendHelp).
-		Alias("?").
-		Desc("Displays the help menu.\n**Keys**\n`<>` - Required\n`[]` - Optional\n`...` - More than one allowed").
-		Cat("Misc").
-		Arg("categery/command...", "Category or command to diplay help about", false, kdgr.RouteArgString).
-		Example("tokeninfo billing", "utility")
-
 	log.Info("Loaded commands")
 
 	s.AddHandler(func(_ *discordgo.Session, m *discordgo.MessageCreate) {
