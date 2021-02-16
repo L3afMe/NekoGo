@@ -117,11 +117,18 @@ func (msg *Message) Footer(name, imageURL string) *Message {
 }
 
 func (c *Context) EditAuto(oldMsg *discordgo.Message, msg *Message) (*discordgo.Message, error) {
-	perms, err := c.Ses.State.UserChannelPermissions(c.Ses.State.User.ID, oldMsg.ChannelID)
+	chnl, err := c.Ses.State.Channel(oldMsg.ChannelID)
+	if err != nil {
+		return c.Ses.ChannelMessageEdit(chnl.ID, oldMsg.ID, msg.ToText())
+	}
 
-	embedPerms := int64(0x00004000)
-	if err != nil || perms&embedPerms != embedPerms {
-		return c.Ses.ChannelMessageEdit(oldMsg.ChannelID, oldMsg.ID, msg.ToText())
+	if chnl.GuildID != "" {
+		perms, err := c.Ses.State.UserChannelPermissions(c.Ses.State.User.ID, chnl.ID)
+
+		embedPerms := int64(0x00004000)
+		if err != nil || perms&embedPerms != embedPerms {
+			return c.Ses.ChannelMessageEdit(oldMsg.ChannelID, oldMsg.ID, msg.ToText())
+		}
 	}
 
 	return c.Ses.ChannelMessageEditEmbed(oldMsg.ChannelID, oldMsg.ID, msg.ToEmbed())
@@ -144,12 +151,19 @@ func (c *Context) ReplyAutoHandle(msg *Message) {
 }
 
 func (c *Context) SendAuto(chnlID string, msg *Message) (*discordgo.Message, error) {
-	perms, err := c.Ses.State.UserChannelPermissions(c.Ses.State.User.ID, chnlID)
-
-	embedPerms := int64(0x00004000)
-	if err != nil || perms&embedPerms != embedPerms {
+	chnl, err := c.Ses.State.Channel(chnlID)
+	if err != nil {
 		return c.Ses.ChannelMessageSend(chnlID, msg.ToText())
 	}
 
-	return c.Ses.ChannelMessageSendEmbed(chnlID, msg.ToEmbed())
+	if chnl.GuildID != "" {
+		perms, err := c.Ses.State.UserChannelPermissions(c.Ses.State.User.ID, chnl.ID)
+
+		embedPerms := int64(0x00004000)
+		if err != nil || perms&embedPerms != embedPerms {
+			return c.Ses.ChannelMessageSend(chnl.ID, msg.ToText())
+		}
+	}
+
+	return c.Ses.ChannelMessageSendEmbed(chnl.ID, msg.ToEmbed())
 }
