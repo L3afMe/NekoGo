@@ -93,7 +93,7 @@ func nickMention(id string) string {
 }
 
 func (r *Route) Group(fn func(r *Route)) *Route {
-	rt := New(r.Config)
+	rt := New(r.Config).Before(r.ExecBefore).After(r.ExecAfter)
 	fn(rt)
 	for _, v := range rt.Routes {
 		if err := r.AddRoute(v); err != nil {

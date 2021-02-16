@@ -68,29 +68,29 @@ func (b *BillingInformation) Format() (output string) {
 	return
 }
 
-func utlPing(ctx *kdgr.Context) {
-	delay := strconv.Itoa(int(ctx.Ses.LastHeartbeatAck.Sub(ctx.Ses.LastHeartbeatSent).Milliseconds()))
+func utlPing(c *kdgr.Context) {
+	delay := strconv.Itoa(int(c.Ses.LastHeartbeatAck.Sub(c.Ses.LastHeartbeatSent).Milliseconds()))
 	content := format.Formatp("WS Delay: ${}ms", delay)
 
 	start := time.Now()
-	_, err := utils.GetDiscord(ctx.Ses.Token, "users/@me", nil)
+	_, err := utils.GetDiscord(c.Ses.Token, "users/@me", nil)
 	end := time.Now()
 	delay = strconv.Itoa(int(end.Sub(start).Milliseconds()))
 	if err != nil {
-		ctx.ReplyAutoHandle(kdgr.NewError(format.
+		c.ReplyAutoHandle(kdgr.NewError(format.
 			Formatp("Failed to execute GET: ${}\n\n${}", err, content)))
 		return
 	}
 	content += format.Formatp("\nGET Delay: ${}ms", delay)
 
 	start = time.Now()
-	body, err := utils.PostDiscord(ctx.Ses.Token,
-		format.Formatp("channels/${}/messages", ctx.Msg.ChannelID),
+	body, err := utils.PostDiscord(c.Ses.Token,
+		format.Formatp("channels/${}/messages", c.Msg.ChannelID),
 		[]byte("{ \"content\": \"Loading ping...\" }"), nil)
 	end = time.Now()
 	delay = strconv.Itoa(int(end.Sub(start).Milliseconds()))
 	if err != nil {
-		ctx.ReplyAutoHandle(kdgr.NewError(format.
+		c.ReplyAutoHandle(kdgr.NewError(format.
 			Formatp("Failed to execute POST: ${}\n\n${}", err, content)))
 		return
 	}
@@ -100,45 +100,45 @@ func utlPing(ctx *kdgr.Context) {
 	err = json.Unmarshal([]byte(body), &loadingMsg)
 
 	if err != nil {
-		ctx.ReplyAutoHandle(kdgr.NewError(format.
+		c.ReplyAutoHandle(kdgr.NewError(format.
 			Formatp("Unable to unmarshal POST message response.\n\n${}", content)))
 		return
 	}
 
-	ctx.EditAutoHandle(&loadingMsg, kdgr.NewMessage("Ping").Desc(content))
+	c.EditAutoHandle(&loadingMsg, kdgr.NewMessage("Ping").Desc(content))
 }
 
-func utlBase64(ctx *kdgr.Context, enc bool) {
-	inp := ctx.Args.All(" ")
+func utlBase64(c *kdgr.Context, enc bool) {
+	inp := c.Args.All(" ")
 
 	if enc {
 		enc := base64.StdEncoding.EncodeToString([]byte(inp))
-		ctx.ReplyAutoHandle(kdgr.NewMessage("Base64").AddField("Encode", "Input: `"+inp+"`\nOutput: `"+enc+"`", false))
+		c.ReplyAutoHandle(kdgr.NewMessage("Base64").AddField("Encode", "Input: `"+inp+"`\nOutput: `"+enc+"`", false))
 	} else {
 		dec, e := base64.StdEncoding.DecodeString(inp)
 		if e != nil {
-			ctx.ReplyInvalidArg(0, "Invalid Base64 string specified")
+			c.ReplyInvalidArg(0, "Invalid Base64 string specified")
 			return
 		}
 
-		ctx.ReplyAutoHandle(kdgr.
+		c.ReplyAutoHandle(kdgr.
 			NewMessage("Base64").
 			AddField("Decode", "Input: `"+inp+"`\nOutput: `"+string(dec)+"`", false))
 	}
 }
 
-func utlTokenInfo(ctx *kdgr.Context, withBilling bool) {
-	tkn := ctx.Args.Get(0).AsString()
+func utlTokenInfo(c *kdgr.Context, withBilling bool) {
+	tkn := c.Args.Get(0).AsString()
 
 	body, err := utils.GetDiscord(tkn, "users/@me", nil)
 	if err != nil {
-		ctx.ReplyAutoHandle(kdgr.
+		c.ReplyAutoHandle(kdgr.
 			NewError("Unable to execute GET request").
 			AddField("Error", format.Formatp("${}", err), false))
 	}
 
 	if strings.Contains(body, "401: Unauthorized") {
-		ctx.ReplyInvalidArg(1, "Unauthorized token specified")
+		c.ReplyInvalidArg(1, "Unauthorized token specified")
 
 		return
 	}
@@ -146,7 +146,7 @@ func utlTokenInfo(ctx *kdgr.Context, withBilling bool) {
 	var user discordgo.User
 	err = json.Unmarshal([]byte(body), &user)
 	if err != nil {
-		ctx.ReplyAutoHandle(kdgr.
+		c.ReplyAutoHandle(kdgr.
 			NewError("Unable to unmarshal response").
 			AddField("Response JSON", "```"+body+"```", false))
 	}
@@ -177,7 +177,7 @@ func utlTokenInfo(ctx *kdgr.Context, withBilling bool) {
 	if withBilling {
 		body, err = utils.GetDiscord(tkn, "users/@me/billing/payment-sources", nil)
 		if err != nil {
-			ctx.ReplyAutoHandle(msg.
+			c.ReplyAutoHandle(msg.
 				AddField("Billing Information",
 					format.Formatp("Error occurred while fetching billing information.\nError: ${}", err),
 					false))
@@ -189,7 +189,7 @@ func utlTokenInfo(ctx *kdgr.Context, withBilling bool) {
 			msg.AddField("Billing Information",
 				"Error occurred while fetching billing information.\nError: 401 Unauthorized",
 				false)
-			ctx.ReplyAutoHandle(msg)
+			c.ReplyAutoHandle(msg)
 
 			return
 		}
@@ -200,7 +200,7 @@ func utlTokenInfo(ctx *kdgr.Context, withBilling bool) {
 			msg.AddField("Billing Information",
 				"Unable to unmarshal response.\n JSON: ```\n"+body+"\n```",
 				false)
-			ctx.ReplyAutoHandle(msg)
+			c.ReplyAutoHandle(msg)
 
 			return
 		}
@@ -220,7 +220,7 @@ func utlTokenInfo(ctx *kdgr.Context, withBilling bool) {
 		}
 	}
 
-	ctx.ReplyAutoHandle(msg)
+	c.ReplyAutoHandle(msg)
 }
 
 func utlAvatar(c *kdgr.Context) {
@@ -242,6 +242,14 @@ func utlAvatar(c *kdgr.Context) {
 		Image(user.AvatarURL("2048")))
 }
 
+func utlUserInfo(c *kdgr.Context) {
+
+}
+
+func utlSmartInfo(c *kdgr.Context) {
+
+}
+
 func loadUtilityCommands(r *kdgr.Route) {
 	r.On("avatar", utlAvatar).
 		Desc("Get the avatar of the mentioned user").
@@ -252,37 +260,42 @@ func loadUtilityCommands(r *kdgr.Route) {
 		Desc("Get the client WebSocket, GET, and POST latency").
 		Alias("latency")
 
-	rBase64 := r.On("base64", func(ctx *kdgr.Context) { ctx.ReplyInvalidArg(0, "Expected 'encode' or 'decode'") }).
+	rBase64 := r.On("base64", func(c *kdgr.Context) { c.ReplyInvalidArg(0, "Expected 'encode' or 'decode'") }).
 		Alias("b64").
 		Desc("Encode and decode Base64 values").
 		Example("decode SW5vcmkgaXMgdGhlIGJlc3Qgd2FpZnU=", "encode I agree").
 		Arg("encode/decode", "Whether to encode or decode value", true, kdgr.RouteArgString).
 		Arg("value...", "The value to encode/decode", true, kdgr.RouteArgString)
 
-	rBase64.On("decode", func(ctx *kdgr.Context) { utlBase64(ctx, false) }).
+	rBase64.On("decode", func(c *kdgr.Context) { utlBase64(c, false) }).
 		Alias("d", "dec").
 		Desc("Decode a Base64 string to a Unicode string").
 		Example("SW5vcmkgaXMgdGhlIGJlc3Qgd2FpZnU=").
 		Arg("value...", "The value to encode", true, kdgr.RouteArgString)
 
-	rBase64.On("encode", func(ctx *kdgr.Context) { utlBase64(ctx, true) }).
+	rBase64.On("encode", func(c *kdgr.Context) { utlBase64(c, true) }).
 		Alias("e", "enc").
 		Desc("Encode a Unicode string to a Base64 sring").
 		Example("I agree").
 		Arg("value...", "The value to encode", true, kdgr.RouteArgString)
 
-	r.On("tokeninfo", func(ctx *kdgr.Context) { utlTokenInfo(ctx, false) }).
+	r.On("tokeninfo", func(c *kdgr.Context) { utlTokenInfo(c, false) }).
 		Alias("token").
 		Desc("Check a tokens user account. Optionally including billing details.").
 		Example("ODAyMTc5MzM1OTg0NTEzMDY0.YArduw.30nmw_xqSuUX6hzRAC_li05Jw3Q",
 			"billing ODAyMTc5MzM1OTg0NTEzMDY0.YArduw.30nmw_xqSuUX6hzRAC_li05Jw3Q").
 		Arg("billing", "Whether te display billing information", false, kdgr.RouteArgString).
 		Arg("token", "The token to check", true, kdgr.RouteArgString).
-		On("billing", func(ctx *kdgr.Context) { utlTokenInfo(ctx, true) }).
+		On("billing", func(c *kdgr.Context) { utlTokenInfo(c, true) }).
 		Alias("b", "bill").
 		Desc("Check a tokens user account including billing details.").
 		Example("ODAyMTc5MzM1OTg0NTEzMDY0.YArduw.30nmw_xqSuUX6hzRAC_li05Jw3Q").
 		Arg("token", "The token to check", true, kdgr.RouteArgString)
+
+	r.On("info", utlSmartInfo)
+
+	r.On("userinfo", utlUserInfo).
+		Alias("ui", "user")
 }
 
 func LoadUtility(r *kdgr.Route) {
