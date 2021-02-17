@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	stdlog "log" //nolint:depguard //Needed to disable 3rd party library logging
 	"os"
+	"os/signal"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -17,11 +18,12 @@ import (
 )
 
 var (
-	log    = logging.MustGetLogger("Main")
-	format = logging.MustStringFormatter(`[%{time:15:04:05.000}][%{color}%{level:.4s}%{color:reset}][%{module}] %{message}`)
-	fToken = flag.String("t", "", "Set a new token to login with")
+	log       = logging.MustGetLogger("Main")
+	logFormat = logging.MustStringFormatter(`[%{time:15:04:05.000}][%{color}%{level:.4s}%{color:reset}][%{module}] %{message}`)
+	fToken    = flag.String("t", "", "Set a new token to login with")
 
 	conf *config.Config
+	ses  *discordgo.Session
 )
 
 func main() {
@@ -29,7 +31,7 @@ func main() {
 	stdlog.SetOutput(ioutil.Discard)
 
 	logBackend := logging.NewLogBackend(os.Stderr, "", 0)
-	logFormatter := logging.NewBackendFormatter(logBackend, format)
+	logFormatter := logging.NewBackendFormatter(logBackend, logFormat)
 	logging.SetBackend(logFormatter)
 
 	db, err := bbolt.Open("NekoGo.db", 0600, &bbolt.Options{Timeout: 1 * time.Second})
@@ -41,7 +43,7 @@ func main() {
 	conf = config.LoadConfig(db, *fToken)
 	conf.Save()
 
-	s, err := discordgo.New(conf.Token)
+	ses, err = discordgo.New(conf.Token)
 	if err != nil {
 		log.Panic("Unable to initialize DiscordGo:", err)
 	}
@@ -101,15 +103,41 @@ func main() {
 
 	log.Info("Loaded commands")
 
-	s.AddHandler(func(_ *discordgo.Session, m *discordgo.MessageCreate) {
-		router.FindAndExecute(s, conf.Prefix, s.State.User.ID, m.Message)
+	ses.AddHandler(func(_ *discordgo.Session, m *discordgo.MessageCreate) {
+		router.FindAndExecute(ses, conf.Prefix, ses.State.User.ID, m.Message)
 	})
 
-	err = s.Open()
+	err = ses.Open()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	log.Notice("Successfully started NekoGo")
 	<-make(chan struct{})
+}
+
+func init() {
+	pressed := false
+	c := make(chan os.Signal, 2)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		for {
+			select {
+			case <-c:
+				if pressed {
+					log.Warning("Forcefully exiting")
+					os.Exit(1)
+				}
+				pressed = true
+				log.Notice("Stopping NekoGo gracefully")
+				log.Info("Press Ctrl-C again to force quit (NOT RECOMMENDED AS THIS CAN BREAK DATABASE)")
+
+				ses.Close()
+				log.Info("Disconnected form Discord")
+				conf.Save()
+				log.Info("Database saved")
+				os.Exit(1)
+			}
+		}
+	}()
 }

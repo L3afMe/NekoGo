@@ -70,7 +70,7 @@ func (a Arg) AsChannel(ses *discordgo.Session) (*discordgo.Channel, error) {
 		return nil, ErrIDRegexNotFound
 	}
 
-	return ses.Channel(string(channelID))
+	return ses.State.Channel(string(channelID))
 }
 
 // AsInteger returns the value parsed to an int

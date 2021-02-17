@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"strings"
 
+	"github.com/bwmarrin/discordgo"
 	"github.com/sirkon/go-format"
 	"github.com/valyala/fasthttp"
 )
@@ -71,10 +72,26 @@ var (
 )
 
 func interaction(c *kdgr.Context) {
-	user, err := c.Args.Get(0).AsUser(c.Ses)
-	if err != nil {
-		c.ReplyInvalidArg(0, "Invalid user specified.")
-		return
+	var user *discordgo.User
+	if len(c.Args) == 0 {
+		chnl, err := c.Ses.State.Channel(c.Msg.ChannelID)
+		if err == nil {
+			if len(chnl.Recipients) == 1 {
+				user = chnl.Recipients[0]
+			}
+		}
+
+		if user == nil {
+			c.ReplyInvalidArg(0, "Invalid user specified.")
+			return
+		}
+	} else {
+		var err error
+		user, err = c.Args.Get(0).AsUser(c.Ses)
+		if err != nil {
+			c.ReplyInvalidArg(0, "Invalid user specified.")
+			return
+		}
 	}
 
 	inter := interactionsMap[c.Route.Name]
@@ -122,7 +139,7 @@ func LoadInteractions(r *kdgr.Route) {
 		for name, inter := range interactionsMap {
 			r.On(name, interaction).
 				Desc(format.Formatp("${} a user", inter.Noun)).
-				Arg("user", format.Formatp("The user to ${}", strings.ToLower(inter.Noun)), true, kdgr.RouteArgUser)
+				Arg("user", format.Formatp("The user to ${}", strings.ToLower(inter.Noun)), false, kdgr.RouteArgUser)
 		}
 	})
 }
