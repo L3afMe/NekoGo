@@ -42,7 +42,7 @@ func (r *Route) OnMatch(name string, matcher func(string) bool, handler HandlerF
 		Category:     r.Category,
 		Handler:      handler,
 		Matcher:      matcher,
-		Availability: RouteBoth,
+		Availability: RouteInBoth,
 		Separator:    " ",
 		Config:       r.Config,
 		ExecBefore:   r.ExecBefore,
@@ -143,10 +143,10 @@ func (r *Route) FindAndExecute(s *discordgo.Session, prefix, botID string, m *di
 			context := NewContext(s, m, args, rt)
 
 			if rt.ExecBefore(context) {
-				if rt.Availability == RouteGuild && m.GuildID == "" ||
-					rt.Availability == RouteDM && m.GuildID != "" {
+				if rt.Availability == RouteInGuild && m.GuildID == "" ||
+					rt.Availability == RouteInDM && m.GuildID != "" {
 					context.ReplyAutoHandle(NewError(format.
-						Formatp("This command can only be used in ${}", rt.Availability)))
+						Formatp("This command can only be used in ${}", strings.ToLower(string(rt.Availability)))))
 				} else {
 					rt.Handler(context)
 				}

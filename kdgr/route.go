@@ -13,9 +13,9 @@ const (
 	RouteArgUser    RouteArgumentType = "user"
 	RouteArgChannel RouteArgumentType = "channel"
 
-	RouteBoth  RouteAvailabilityType = "DMs and Guilds"
-	RouteDM    RouteAvailabilityType = "DMs"
-	RouteGuild RouteAvailabilityType = "Guilds"
+	RouteInBoth  RouteAvailabilityType = "DMs and Guilds"
+	RouteInDM    RouteAvailabilityType = "DMs"
+	RouteInGuild RouteAvailabilityType = "Guilds"
 )
 
 type RouteArgument struct {
@@ -48,9 +48,10 @@ type Route struct {
 
 func New(conf *config.Config) *Route {
 	return &Route{
-		Routes:   []*Route{},
-		Category: "",
-		Config:   conf,
+		Routes:       []*Route{},
+		Category:     "",
+		Config:       conf,
+		Availability: RouteInBoth,
 	}
 }
 
@@ -87,7 +88,7 @@ func (r *Route) Perms(permissions ...int) *Route {
 	return r
 }
 
-func (r *Route) Where(where RouteAvailabilityType) *Route {
+func (r *Route) In(where RouteAvailabilityType) *Route {
 	r.Availability = where
 	return r
 }

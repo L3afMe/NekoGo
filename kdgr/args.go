@@ -14,9 +14,11 @@ import (
 var (
 	reID      = regexp.MustCompile(`\d{18}`)
 	reUser    = regexp.MustCompile(`<@!?\d{18}>`)
+	reRole    = regexp.MustCompile(`<@&\d{18}>`)
 	reChannel = regexp.MustCompile(`<#\d{18}>`)
 
 	ErrIDRegexNotFound = errors.New("unable to get ID from argument")
+	ErrRoleNotFound    = errors.New("unable to find role in guild")
 )
 
 // ArgError is a helper that makes returning the index and route easier if there are invalid args
@@ -32,6 +34,11 @@ type Arg string
 func (a Arg) IsUser() bool {
 	return (len(a.AsString()) == 18 && reID.MatchString(a.AsString())) ||
 		(len(a.AsString()) <= 22 && reUser.MatchString(a.AsString()))
+}
+
+func (a Arg) IsRole() bool {
+	return (len(a.AsString()) == 18 && reID.MatchString(a.AsString())) ||
+		(len(a.AsString()) <= 22 && reRole.MatchString(a.AsString()))
 }
 
 // IsChannel returns if the argument is a channel or channel id
@@ -60,6 +67,22 @@ func (a Arg) AsUser(ses *discordgo.Session) (*discordgo.User, error) {
 	}
 
 	return ses.User(string(channelID))
+}
+
+func (a Arg) AsRole(g *discordgo.Guild) (*discordgo.Role, error) {
+	roleID := reID.Find([]byte(a))
+
+	if len(roleID) == 0 {
+		return nil, ErrIDRegexNotFound
+	}
+
+	for _, role := range g.Roles {
+		if role.ID == string(roleID) {
+			return role, nil
+		}
+	}
+
+	return nil, ErrRoleNotFound
 }
 
 // AsChannel returns the discordgo.Channel that was mentioned

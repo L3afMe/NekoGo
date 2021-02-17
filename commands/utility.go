@@ -243,7 +243,17 @@ func utlAvatar(c *kdgr.Context) {
 }
 
 func utlUserInfo(c *kdgr.Context) {
+	user := c.Msg.Author
+	if len(c.Args) == 0 {
+		var err error
+		user, err = c.Args.Get(0).AsUser(c.Ses)
+		if err != nil {
+			c.ReplyInvalidArg(0, "Invalid user specified.")
+			return
+		}
+	}
 
+	utlUserInfoShow(c, user)
 }
 
 func utlUserInfoShow(c *kdgr.Context, user *discordgo.User) {
@@ -251,7 +261,21 @@ func utlUserInfoShow(c *kdgr.Context, user *discordgo.User) {
 }
 
 func utlChannelInfo(c *kdgr.Context) {
+	var chnl *discordgo.Channel
+	var err error
+	if len(c.Args) == 1 {
+		if chnl, err = c.Args.Get(0).AsChannel(c.Ses); err != nil {
+			c.ReplyInvalidArg(0, "Invalid channel specified.")
+			return
+		}
+	} else {
+		if chnl, err = c.Ses.State.Channel(c.Msg.ChannelID); err != nil {
+			c.ReplyAutoHandle(kdgr.NewError("Unable to get current channel"))
+			return
+		}
+	}
 
+	utlChannelInfoShow(c, chnl)
 }
 
 func utlChannelInfoShow(c *kdgr.Context, chnl *discordgo.Channel) {
@@ -259,7 +283,13 @@ func utlChannelInfoShow(c *kdgr.Context, chnl *discordgo.Channel) {
 }
 
 func utlGuildInfo(c *kdgr.Context) {
+	g, err := c.Ses.State.Guild(c.Msg.GuildID)
+	if err != nil {
+		c.ReplyAutoHandle(kdgr.NewError("Unable to get current guild."))
+		return
+	}
 
+	utlGuildInfoShow(c, g)
 }
 
 func utlGuildInfoShow(c *kdgr.Context, g *discordgo.Guild) {
@@ -267,7 +297,34 @@ func utlGuildInfoShow(c *kdgr.Context, g *discordgo.Guild) {
 }
 
 func utlRoleInfo(c *kdgr.Context) {
+	g, err := c.Ses.State.Guild(c.Msg.GuildID)
+	if err != nil {
+		c.ReplyAutoHandle(kdgr.NewError("Unable to get current guild."))
+		return
+	}
 
+	if arg := c.Args.Get(0); arg.IsRole() {
+		if role, err := arg.AsRole(g); err == nil {
+			utlRoleInfoShow(c, role)
+			return
+		}
+	}
+
+	roles := utlRoleInfoFindRole(c, g, c.Args.All(" "))
+	if len(roles) == 0 {
+		c.ReplyAutoHandle(kdgr.NewError(format.Formatp("No roles match `${}`", c.Args.All(" "))))
+	} else if len(roles) == 1 {
+		utlRoleInfoShow(c, roles[0])
+	} else {
+		roleList := make([]string, len(roles))
+		for _, role := range roles {
+			roleList = append(roleList, format.Formatp("${} - ${}", role.Mention(), role.ID))
+		}
+		c.ReplyAutoHandle(kdgr.
+			NewMessage("Role Info").
+			Desc("Too many roles match.").
+			AddField("IDs", strings.Join(roleList, "\n"), false))
+	}
 }
 
 func utlRoleInfoShow(c *kdgr.Context, role *discordgo.Role) {
@@ -415,16 +472,18 @@ func loadUtilityCommands(r *kdgr.Route) {
 
 	r.On("guildinfo", utlGuildInfo).
 		Desc("Display information about a specic guild.").
+		In(kdgr.RouteInGuild).
 		Alias("gi", "guild", "si", "server", "serverinfo")
 
 	r.On("roleinfo", utlRoleInfo).
 		Desc("Display information about a specic role.").
 		Example("Mod", "").
 		Alias("ri", "role").
-		Arg("role", "The role to view info about", false, kdgr.RouteArgString)
+		Arg("role...", "The role to view info about", true, kdgr.RouteArgString)
 
 	r.On("channelinfo", utlChannelInfo).
 		Desc("Display information about a specic channel.").
+		In(kdgr.RouteInGuild).
 		Example("#General", "").
 		Alias("ci", "channel").
 		Arg("channel", "The channel to view info about", false, kdgr.RouteArgChannel)
