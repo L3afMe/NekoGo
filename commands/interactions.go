@@ -65,7 +65,7 @@ var (
 			"${0} fed ${1}",
 			"${0} shoved some food down ${1}'s throat",
 		}, siteNekosLife},
-		"poke": {"Poke", "poked", []string{
+		"poke": {"Poke", "poke", []string{
 			"${0} poked ${1}",
 		}, siteNekosLife},
 	}
@@ -108,6 +108,7 @@ func interaction(c *kdgr.Context) {
 			err := fasthttp.Do(req, resp)
 			if err != nil {
 				c.ReplyAutoHandle(kdgr.NewError(format.Formatp("Unable to get image: ${}", err)))
+				return
 			}
 			bodyStr := resp.Body()
 
@@ -116,11 +117,13 @@ func interaction(c *kdgr.Context) {
 			err = json.Unmarshal(bodyStr, &resMap)
 			if err != nil {
 				c.ReplyAutoHandle(kdgr.NewError(format.Formatp("Unable to unmarshal response: ${}", err)))
+				return
 			}
 
 			err = json.Unmarshal(resMap["url"], &url)
 			if err != nil {
-				c.ReplyAutoHandle(kdgr.NewError(format.Formatp("Unable to unmarshal response: ${}", err)))
+				c.ReplyAutoHandle(kdgr.NewError(format.Formatp("Unable to unmarshal URL from response: ${}", err)))
+				return
 			}
 		}
 	}
