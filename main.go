@@ -6,6 +6,7 @@ import (
 	"L3afMe/Krul/kdgr"
 	"encoding/binary"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	stdlog "log" //nolint:depguard //Needed to disable 3rd party library logging
 	"os"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/op/go-logging"
+	"github.com/sirkon/go-format"
 	"go.etcd.io/bbolt"
 )
 
@@ -26,7 +28,14 @@ var (
 	ses  *discordgo.Session
 )
 
+func Test() struct{} {
+	return struct{}{}
+}
+
 func main() {
+	x := 42
+	fmt.Println(x)
+
 	flag.Parse()
 	stdlog.SetOutput(ioutil.Discard)
 
@@ -52,7 +61,7 @@ func main() {
 	router := kdgr.New(conf).
 		Before(func(ctx *kdgr.Context) bool {
 			if ctx.Msg.Author.ID == ctx.Ses.State.User.ID {
-				err := ctx.Ses.ChannelMessageDelete(ctx.Msg.ChannelID, ctx.Msg.ID)
+				err = ctx.Ses.ChannelMessageDelete(ctx.Msg.ChannelID, ctx.Msg.ID)
 				if err != nil {
 					log.Warning("Unable to delete message:", err)
 				}
@@ -60,7 +69,8 @@ func main() {
 				log.Info("Running '" + ctx.Route.GetFullName() + "'")
 
 				err = ctx.Route.Config.DB.Update(func(tx *bbolt.Tx) error {
-					b, err := tx.CreateBucketIfNotExists(config.ToBytes("usages"))
+					var b *bbolt.Bucket
+					b, err = tx.CreateBucketIfNotExists(config.ToBytes("usages"))
 					if err != nil {
 						return err
 					}
@@ -107,37 +117,25 @@ func main() {
 		router.FindAndExecute(ses, conf.Prefix, ses.State.User.ID, m.Message)
 	})
 
+	ses.AddHandler(func(_ *discordgo.Session, _ *discordgo.Ready) {
+		log.Info(format.Formatp("NekoGo connected to ${}", ses.State.User.String()))
+	})
+
 	err = ses.Open()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(format.Formatp("Unable to connect to Discord: ", err))
 	}
 
-	log.Notice("Successfully started NekoGo")
-	<-make(chan struct{})
-}
-
-func init() {
-	pressed := false
-	c := make(chan os.Signal, 2)
-	signal.Notify(c, os.Interrupt)
-	go func() {
-		for {
-			select {
-			case <-c:
-				if pressed {
-					log.Warning("Forcefully exiting")
-					os.Exit(1)
-				}
-				pressed = true
-				log.Notice("Stopping NekoGo gracefully")
-				log.Info("Press Ctrl-C again to force quit (NOT RECOMMENDED AS THIS CAN BREAK DATABASE)")
-
-				ses.Close()
-				log.Info("Disconnected form Discord")
-				conf.Save()
-				log.Info("Database saved")
-				os.Exit(1)
-			}
-		}
+	defer func() {
+		ses.Close()
+		log.Info("Disconnected from Discord")
+		conf.Save()
+		log.Info("Database saved")
 	}()
+
+	log.Notice("Successfully initialized NekoGo")
+	stop := make(chan os.Signal)
+	signal.Notify(stop, os.Interrupt)
+	<-stop
+	log.Info("Stopping NekoGo gracefully")
 }
