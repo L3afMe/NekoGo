@@ -471,18 +471,18 @@ func loadUtilityCommands(r *kdgr.Route) {
 		Arg("user/channel/role", "The object to view info about", false, kdgr.RouteArgString)
 
 	r.On("guildinfo", utlGuildInfo).
-		Desc("Display information about a specic guild.").
+		Desc("Display information about a specific guild.").
 		In(kdgr.RouteInGuild).
 		Alias("gi", "guild", "si", "server", "serverinfo")
 
 	r.On("roleinfo", utlRoleInfo).
-		Desc("Display information about a specic role.").
+		Desc("Display information about a specific role.").
 		Example("Mod", "").
 		Alias("ri", "role").
 		Arg("role...", "The role to view info about", true, kdgr.RouteArgString)
 
 	r.On("channelinfo", utlChannelInfo).
-		Desc("Display information about a specic channel.").
+		Desc("Display information about a specific channel.").
 		In(kdgr.RouteInGuild).
 		Example("#General", "").
 		Alias("ci", "channel").
