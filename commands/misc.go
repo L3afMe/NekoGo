@@ -3,6 +3,7 @@ package commands
 import (
 	"L3afMe/Krul/config"
 	"L3afMe/Krul/kdgr"
+	"L3afMe/Krul/utils"
 	"encoding/binary"
 	"sort"
 	"strconv"
@@ -62,9 +63,25 @@ func mscUsages(c *kdgr.Context) {
 	c.ReplyAutoHandle(msg)
 }
 
+func mscAbout(c *kdgr.Context) {
+	msg := kdgr.NewMessage("About").
+		Desc("A simple to use Discord selfbot written in Golang with a focus on speed and plethora of commands").
+		AddField("Version", utils.Version, true).
+		AddField("Developer", "[GitHub](https://github.com/L3afMe) | L3af#0001", true).
+		AddField("GitHub", "[L3afMe/NekoGo](https://github.com/L3afMe/NekoGo)", true).
+		AddField("Framework", "[DiscordGo](https://github.com/bwmarrin/discordgo)", true).
+		Thumbnail("https://user-images.githubusercontent.com/72546287/" +
+			"108258608-16cd9580-71c5-11eb-9544-6b6c25951c55.png")
+
+	c.ReplyAutoHandle(msg)
+}
+
 func loadMiscCommands(r *kdgr.Route) {
 	r.On("usages", mscUsages).
 		Desc("Display how often commands are used")
+
+	r.On("about", mscAbout).
+		Desc("Show some info about NekoGo")
 
 	r.On("help", kdgr.SendHelp).
 		Alias("?").
