@@ -1,6 +1,12 @@
 <div align="center">
     <h1>NekoGo</h1>
     <p>A simple to use Discord selfbot with a focus on speed (that isn't written in Python or Javascript!)</p>
+    <p>
+        <a><img alt="Latest Release" src="https://img.shields.io/github/v/release/L3afMe/NekoGo?color=%23bd93f9&include_prereleases&style=for-the-badge"></a>
+        <a href="https://github.com/L3afMe/NekoGo/actions?query=workflow%3A%22Go+Build%22"><img alt="Build Status Badge" src="https://img.shields.io/github/workflow/status/L3afMe/NekoGo/Go%20Build/master?color=%23bd93f9&style=for-the-badge"></a>
+        <img alt="Lines of code" src="https://img.shields.io/tokei/lines/github/L3afMe/NekoGo?color=%23bd93f9&style=for-the-badge">
+        <a href="https://github.com/L3afMe/NekoGo/blob/master/LICENSE"><img alt="License Badge" src="https://img.shields.io/github/license/L3afMe/NekoGo?color=%23bd93f9&style=for-the-badge"></a>
+    </div>
 </div>
 
 ## Contents
