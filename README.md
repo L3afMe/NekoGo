@@ -1,6 +1,6 @@
 <div align="center">
     <h1>NekoGo</h1>
-    <p>A simple and speedy Discord selfbot (that isn't written in Python or Javascript!)</p>
+    <p>A simple to use Discord selfbot with a focus on speed (that isn't written in Python or Javascript!)</p>
 </div>
 
 ## Contents
