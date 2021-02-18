@@ -310,20 +310,23 @@ func utlRoleInfo(c *kdgr.Context) {
 		}
 	}
 
-	roles := utlRoleInfoFindRole(c, g, c.Args.All(" "))
-	if len(roles) == 0 {
+	roles := utlRoleInfoFindRole(g, c.Args.All(" "))
+	switch len(roles) {
+	case 0:
 		c.ReplyAutoHandle(kdgr.NewError(format.Formatp("No roles match `${}`", c.Args.All(" "))))
-	} else if len(roles) == 1 {
+	case 1:
 		utlRoleInfoShow(c, roles[0])
-	} else {
-		roleList := make([]string, len(roles))
-		for _, role := range roles {
-			roleList = append(roleList, format.Formatp("${} - ${}", role.Mention(), role.ID))
+	default:
+		{
+			roleList := make([]string, len(roles))
+			for _, role := range roles {
+				roleList = append(roleList, format.Formatp("${} - ${}", role.Mention(), role.ID))
+			}
+			c.ReplyAutoHandle(kdgr.
+				NewMessage("Role Info").
+				Desc("Too many roles match.").
+				AddField("IDs", strings.Join(roleList, "\n"), false))
 		}
-		c.ReplyAutoHandle(kdgr.
-			NewMessage("Role Info").
-			Desc("Too many roles match.").
-			AddField("IDs", strings.Join(roleList, "\n"), false))
 	}
 }
 
@@ -331,38 +334,23 @@ func utlRoleInfoShow(c *kdgr.Context, role *discordgo.Role) {
 	c.Log.Info(role.Name)
 }
 
-func utlRoleInfoFindRole(c *kdgr.Context, g *discordgo.Guild, roleName string) []*discordgo.Role {
-	matchRoles := []*discordgo.Role{}
+func utlRoleInfoFindRole(g *discordgo.Guild, roleName string) []*discordgo.Role {
+	for x := 0; x < 3; x++ {
+		matchRoles := []*discordgo.Role{}
 
-	for _, role := range g.Roles {
-		if role.Name == roleName {
-			matchRoles = append(matchRoles, role)
+		for _, role := range g.Roles {
+			if (x == 0 && role.Name == roleName) ||
+				(x == 1 && strings.EqualFold(role.Name, roleName)) ||
+				(x == 2 && utils.SContainsCI(role.Name, roleName)) {
+				matchRoles = append(matchRoles, role)
+			}
+		}
+
+		if len(matchRoles) != 0 {
+			return matchRoles
 		}
 	}
-
-	if len(matchRoles) != 0 {
-		return matchRoles
-	}
-	matchRoles = []*discordgo.Role{}
-
-	for _, role := range g.Roles {
-		if strings.EqualFold(role.Name, roleName) {
-			matchRoles = append(matchRoles, role)
-		}
-	}
-
-	if len(matchRoles) != 0 {
-		return matchRoles
-	}
-	matchRoles = []*discordgo.Role{}
-
-	for _, role := range g.Roles {
-		if utils.SContainsCI(role.Name, roleName) {
-			matchRoles = append(matchRoles, role)
-		}
-	}
-
-	return matchRoles
+	return make([]*discordgo.Role, 0)
 }
 
 func utlSmartInfo(c *kdgr.Context) {
@@ -386,7 +374,7 @@ func utlSmartInfo(c *kdgr.Context) {
 		if c.Msg.GuildID != "" {
 			g, err := c.Ses.State.Guild(c.Msg.GuildID)
 			if err == nil {
-				roles := utlRoleInfoFindRole(c, g, arg.AsString())
+				roles := utlRoleInfoFindRole(g, arg.AsString())
 				switch len(roles) {
 				case 0:
 					break

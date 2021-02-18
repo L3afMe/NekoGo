@@ -20,6 +20,6 @@ func SAContains(h []string, j string) bool {
 	return false
 }
 
-func SContainsCI(h string, j string) bool {
+func SContainsCI(h, j string) bool {
 	return strings.Contains(strings.ToLower(h), strings.ToLower(j))
 }

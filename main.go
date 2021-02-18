@@ -6,7 +6,6 @@ import (
 	"L3afMe/Krul/kdgr"
 	"encoding/binary"
 	"flag"
-	"fmt"
 	"io/ioutil"
 	stdlog "log" //nolint:depguard //Needed to disable 3rd party library logging
 	"os"
@@ -28,14 +27,7 @@ var (
 	ses  *discordgo.Session
 )
 
-func Test() struct{} {
-	return struct{}{}
-}
-
 func main() {
-	x := 42
-	fmt.Println(x)
-
 	flag.Parse()
 	stdlog.SetOutput(ioutil.Discard)
 
@@ -59,14 +51,12 @@ func main() {
 	log.Info("Initialized DiscordGo")
 
 	router := kdgr.New(conf).
-		Before(func(ctx *kdgr.Context) bool {
+		Before(func(ctx *kdgr.Context) (cont bool) {
 			if ctx.Msg.Author.ID == ctx.Ses.State.User.ID {
-				err = ctx.Ses.ChannelMessageDelete(ctx.Msg.ChannelID, ctx.Msg.ID)
-				if err != nil {
-					log.Warning("Unable to delete message:", err)
+				if err = ctx.Ses.ChannelMessageDelete(ctx.Msg.ChannelID, ctx.Msg.ID); err != nil {
+					log.Warning(format.Formatp("Unable to delete message: ${}", err))
 				}
-
-				log.Info("Running '" + ctx.Route.GetFullName() + "'")
+				log.Info(format.Formatp("Running '${}'", ctx.Route.GetFullName()))
 
 				err = ctx.Route.Config.DB.Update(func(tx *bbolt.Tx) error {
 					var b *bbolt.Bucket
@@ -96,13 +86,12 @@ func main() {
 					log.Error("Unable to update usages in database.")
 				}
 
-				return true
+				cont = true
 			}
-
-			return false
+			return
 		}).
 		After(func(ctx *kdgr.Context) {
-			log.Info("Finished running '" + ctx.Route.GetFullName() + "'")
+			log.Info(format.Formatp("Finished running '${}'", ctx.Route.GetFullName()))
 		})
 
 	commands.LoadConfig(router)
@@ -134,7 +123,7 @@ func main() {
 	}()
 
 	log.Notice("Successfully initialized NekoGo")
-	stop := make(chan os.Signal)
+	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
 	<-stop
 	log.Info("Stopping NekoGo gracefully")
