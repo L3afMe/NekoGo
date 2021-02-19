@@ -1,38 +1,41 @@
 package commands
 
 import (
-	"L3afMe/Krul/kdgr"
+	"L3afMe/NekoGo/router"
 
 	"github.com/sirkon/go-format"
 )
 
-func loadConfigCommands(r *kdgr.Route) {
-	r.On("prefix", func(c *kdgr.Context) {
-		if len(c.Args) == 0 {
-			c.ReplyAutoHandle(kdgr.NewMessage("Prefix").
-				Desc(format.Formatp("Current prefix: `${}`", c.Route.Config.Prefix)))
+func cfgPrefix(c *router.Context) {
+	msg := router.NewMessage("Prefix")
 
-			return
-		}
-
+	if len(c.Args) == 0 {
+		msg.Desc(format.Formatp(
+			"Current prefix: `${}`",
+			c.Route.Config.Prefix,
+		))
+	} else {
 		oldPrefix := c.Route.Config.Prefix
-		c.Route.Config.Prefix = c.Args.All("")
+		c.Route.Config.Prefix = c.Args.Get(0).AsString()
 		c.Route.Config.Save()
 
-		c.ReplyAutoHandle(kdgr.NewMessage("Prefix").
-			Desc(format.Formatp("Old prefix: `${}`\nNew prefix: `${}`",
-				oldPrefix, c.Route.Config.Prefix)))
-	}).
-		Desc("Set the prefix to execute commands."+
-			"If no args are given then the current prefix will be displayed").
-		Arg("prefix", "New prefix to set", false, kdgr.RouteArgString).
-		Example("", "~")
+		msg.Desc(format.Formatp(
+			"Old prefix: `${}`\nNew prefix: `${}`",
+			oldPrefix, c.Route.Config.Prefix,
+		))
+	}
+
+	c.ReplyAutoHandle(msg)
 }
 
-func LoadConfig(r *kdgr.Route) {
-	r.Group(func(r *kdgr.Route) {
+func LoadConfig(r *router.Route) {
+	r.Group(func(r *router.Route) {
 		r.Cat("Config")
 
-		loadConfigCommands(r)
+		cPrefix := r.On("prefix", cfgPrefix)
+		cPrefix.Desc("Set the prefix to execute commands." +
+			"If no args are given then the current prefix will be displayed.")
+		cPrefix.Arg("prefix", "New prefix to set", false, router.ArgString)
+		cPrefix.Example("", "~")
 	})
 }

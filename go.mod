@@ -1,4 +1,4 @@
-module L3afMe/Krul
+module L3afMe/NekoGo
 
 go 1.15
 

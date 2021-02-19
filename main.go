@@ -1,9 +1,9 @@
 package main
 
 import (
-	"L3afMe/Krul/commands"
-	"L3afMe/Krul/config"
-	"L3afMe/Krul/kdgr"
+	"L3afMe/NekoGo/commands"
+	"L3afMe/NekoGo/config"
+	"L3afMe/NekoGo/router"
 	"encoding/binary"
 	"flag"
 	"io/ioutil"
@@ -28,8 +28,8 @@ var (
 )
 
 func main() {
-	flag.Parse()
 	stdlog.SetOutput(ioutil.Discard)
+	flag.Parse()
 
 	logBackend := logging.NewLogBackend(os.Stderr, "", 0)
 	logFormatter := logging.NewBackendFormatter(logBackend, logFormat)
@@ -37,7 +37,7 @@ func main() {
 
 	db, err := bbolt.Open("NekoGo.db", 0600, &bbolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
-		log.Fatal("Unable to initialize database:", err)
+		log.Fatal(format.Formatp("Unable to initialize database: ${}", err))
 	}
 	log.Info("Initialized Database")
 
@@ -46,64 +46,23 @@ func main() {
 
 	ses, err = discordgo.New(conf.Token)
 	if err != nil {
-		log.Panic("Unable to initialize DiscordGo:", err)
+		log.Panic(format.Formatp("Unable to connect to Discord: ${}", err))
 	}
 	log.Info("Initialized DiscordGo")
 
-	router := kdgr.New(conf).
-		Before(func(ctx *kdgr.Context) (cont bool) {
-			if ctx.Msg.Author.ID == ctx.Ses.State.User.ID {
-				if err = ctx.Ses.ChannelMessageDelete(ctx.Msg.ChannelID, ctx.Msg.ID); err != nil {
-					log.Warning(format.Formatp("Unable to delete message: ${}", err))
-				}
-				log.Info(format.Formatp("Running '${}'", ctx.Route.GetFullName()))
+	root := router.NewRoot(conf)
+	root.Before(before)
 
-				err = ctx.Route.Config.DB.Update(func(tx *bbolt.Tx) error {
-					var b *bbolt.Bucket
-					b, err = tx.CreateBucketIfNotExists(config.ToBytes("usages"))
-					if err != nil {
-						return err
-					}
-
-					keyStr := ctx.Route.GetRootParent().Name
-					key := config.ToBytes(keyStr)
-
-					bVal := make([]byte, 8)
-
-					val := b.Get(key)
-					if val == nil {
-						binary.LittleEndian.PutUint32(bVal, 1)
-					} else {
-						curVal := binary.LittleEndian.Uint32(val)
-						binary.LittleEndian.PutUint32(bVal, curVal+1)
-					}
-
-					config.SafePut(b, keyStr, bVal)
-
-					return nil
-				})
-				if err != nil {
-					log.Error("Unable to update usages in database.")
-				}
-
-				cont = true
-			}
-			return
-		}).
-		After(func(ctx *kdgr.Context) {
-			log.Info(format.Formatp("Finished running '${}'", ctx.Route.GetFullName()))
-		})
-
-	commands.LoadConfig(router)
-	commands.LoadFun(router)
-	commands.LoadInteractions(router)
-	commands.LoadMisc(router)
-	commands.LoadUtility(router)
+	commands.LoadConfig(root)
+	commands.LoadFun(root)
+	commands.LoadInteractions(root)
+	commands.LoadMisc(root)
+	commands.LoadUtility(root)
 
 	log.Info("Loaded commands")
 
 	ses.AddHandler(func(_ *discordgo.Session, m *discordgo.MessageCreate) {
-		router.FindAndExecute(ses, conf.Prefix, ses.State.User.ID, m.Message)
+		root.FindAndExecute(ses, m.Message)
 	})
 
 	ses.AddHandler(func(_ *discordgo.Session, _ *discordgo.Ready) {
@@ -112,7 +71,7 @@ func main() {
 
 	err = ses.Open()
 	if err != nil {
-		log.Fatal(format.Formatp("Unable to connect to Discord: ", err))
+		log.Fatal(format.Formatp("Unable to connect to Discord: &{}", err))
 	}
 
 	defer func() {
@@ -127,4 +86,46 @@ func main() {
 	signal.Notify(stop, os.Interrupt)
 	<-stop
 	log.Info("Stopping NekoGo gracefully")
+}
+
+func before(ctx *router.Context) (cont bool) {
+	if ctx.Msg.Author.ID == ctx.Ses.State.User.ID {
+		if err := ctx.Ses.ChannelMessageDelete(ctx.Msg.ChannelID, ctx.Msg.ID); err != nil {
+			ctx.Log.Warning(format.Formatp("Unable to delete message: ${}", err))
+		}
+
+		ctx.Log.Info(format.Formatp("Running '${}'", ctx.Route.GetFullName()))
+
+		err := ctx.Route.Config.DB.Update(func(tx *bbolt.Tx) error {
+			b, err := tx.CreateBucketIfNotExists(config.ToBytes("usages"))
+			if err != nil {
+				return err
+			}
+
+			keyStr := ctx.Route.GetRootParent().Name
+			key := config.ToBytes(keyStr)
+
+			bVal := make([]byte, 8)
+
+			val := b.Get(key)
+			if val == nil {
+				binary.LittleEndian.PutUint32(bVal, 1)
+			} else {
+				curVal := binary.LittleEndian.Uint32(val)
+				binary.LittleEndian.PutUint32(bVal, curVal+1)
+			}
+
+			config.SafePut(b, keyStr, bVal)
+
+			return nil
+		})
+
+		if err != nil {
+			ctx.Log.Error(format.Formatp("Unable to update usages in database. Error: ${}", err))
+		}
+
+		cont = true
+	}
+
+	return cont
 }

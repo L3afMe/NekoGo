@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/op/go-logging"
+	"github.com/sirkon/go-format"
 	"github.com/valyala/fasthttp"
 	"go.etcd.io/bbolt"
 )
@@ -32,7 +33,7 @@ func ToBytes(src string) []byte {
 func FromBytes(src []byte, fallback string) string {
 	out := make([]byte, hex.DecodedLen(len(src)))
 	if _, err := hex.Decode(out, src); err != nil {
-		log.Error("Unable to decode '" + string(src) + "' to string")
+		log.Error(format.Formatp("Unable to decode '${}' to string.", string(src)))
 		return fallback
 	}
 
@@ -45,7 +46,7 @@ func FromBytes(src []byte, fallback string) string {
 
 func SafePut(b *bbolt.Bucket, key string, value []byte) {
 	if err := b.Put(ToBytes(key), value); err != nil {
-		log.Error("Unable to put value with key '"+key+"' in database. Error:", err)
+		log.Error(format.Formatp("Unable to put value with key '${}' in database. Error: ${}", key, err))
 	}
 }
 
@@ -60,7 +61,7 @@ func (c *Config) Save() {
 	})
 
 	if err != nil {
-		log.Error("Error occurred while updating database:", err)
+		log.Error(format.Formatp("Error occurred while updating database: ${}", err))
 	}
 }
 
@@ -70,14 +71,14 @@ func LoadConfig(db *bbolt.DB, fToken string) *Config {
 
 	err := db.Update(func(tx *bbolt.Tx) error {
 		if _, err := tx.CreateBucketIfNotExists(ToBytes("Config")); err != nil {
-			log.Panic("Unable to create 'Config' bucket in database. Error:", err)
+			log.Panic(format.Formatp("Unable to create 'Config' bucket in database. Error: ${}", err))
 		}
 
 		return nil
 	})
 
 	if err != nil {
-		log.Panic("Error occurred while initializing database:", err)
+		log.Panic(format.Formatp("Error occurred while initializing database: ${}", err))
 	}
 
 	err = db.View(func(tx *bbolt.Tx) error {
@@ -97,7 +98,7 @@ func LoadConfig(db *bbolt.DB, fToken string) *Config {
 	})
 
 	if err != nil {
-		log.Error("Error occurred while loading config from database:", err)
+		log.Error(format.Formatp("Error occurred while loading config from database: ${}", err))
 	}
 
 	log.Info("Checking token")
@@ -126,7 +127,7 @@ func checkToken(token string) bool {
 	req.Header.Set("authorization", token)
 	req.Header.SetMethodBytes([]byte("GET"))
 	req.SetRequestURIBytes([]byte("https://discord.com/api/v8/users/@me"))
-	if err := fasthttp.Do(req, resp); err != nil {
+	if fasthttp.Do(req, resp) != nil {
 		fasthttp.ReleaseResponse(resp)
 		return false
 	}

@@ -7,17 +7,16 @@ func PostDiscord(tkn, path string, jsonBody []byte, setHeaders func(*fasthttp.Re
 	resp := fasthttp.AcquireResponse()
 
 	req.SetRequestURIBytes([]byte("https://discord.com/api/v8/" + path))
+	req.SetBody(jsonBody)
 
 	req.Header.Set("authorization", tkn)
 	req.Header.SetMethodBytes([]byte("POST"))
 	req.Header.SetContentType("application/json")
-	req.SetBody(jsonBody)
 	if setHeaders != nil {
 		setHeaders(&req.Header)
 	}
 
-	err = fasthttp.Do(req, resp)
-	if err == nil {
+	if fasthttp.Do(req, resp) == nil {
 		body = string(resp.Body())
 	}
 
@@ -37,8 +36,7 @@ func GetDiscord(tkn, path string, setHeaders func(*fasthttp.RequestHeader)) (bod
 		setHeaders(&req.Header)
 	}
 
-	err = fasthttp.Do(req, resp)
-	if err == nil {
+	if fasthttp.Do(req, resp) == nil {
 		body = string(resp.Body())
 	}
 

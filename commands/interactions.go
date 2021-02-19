@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"L3afMe/Krul/kdgr"
+	"L3afMe/NekoGo/router"
 	"encoding/json"
 	"math/rand"
 	"strings"
@@ -17,7 +17,7 @@ const (
 	siteNekosLife interactionSite = iota
 )
 
-type Interaction struct {
+type interaction struct {
 	Noun      string
 	URL       string
 	Responses []string
@@ -25,57 +25,114 @@ type Interaction struct {
 }
 
 var (
-	interactionsMap = map[string]Interaction{
-		"kiss": {"Kiss", "kiss", []string{
-			"${0} kissed ${1}",
-		}, siteNekosLife},
-		"slap": {"Slap", "slap", []string{
-			"${0} slapped ${1}",
-		}, siteNekosLife},
-		"cuddle": {"Cuddle", "cuddle", []string{
-			"${0} cuddled ${1}",
-			"${0} snuggled up to ${1}",
-		}, siteNekosLife},
-		"hug": {"Hug", "hug", []string{
-			"${0} hugged ${1}",
-			"${0} wrapped their arms around ${1} and hugged them",
-		}, siteNekosLife},
-		"spank": {"Spank", "spank", []string{
-			"${0} spanked ${1}",
-			"${1} got their ass spanked by ${0}",
-			"${0} beat ${1}'s ass",
-		}, siteNekosLife},
-		"bj": {"Give some head to", "bj", []string{
-			"${0} gave ${1} same top",
-			"${0} sucked off ${1}",
-		}, siteNekosLife},
-		"anal": {"Give some head to", "anal", []string{
-			"${0} tore apart ${1}'s ass",
-			"${0} put their dick in ${1}'s ass",
-		}, siteNekosLife},
-		"tickle": {"Tickle", "tickle", []string{
-			"${0} tickled ${1}",
-		}, siteNekosLife},
-		"pat": {"Pat", "pat", []string{
-			"${0} patted ${1}",
-			"${0} gave ${1} some head pats",
-		}, siteNekosLife},
-		"feed": {"Feed", "feed", []string{
-			"${0} fed ${1} some food",
-			"${0} fed ${1}",
-			"${0} shoved some food down ${1}'s throat",
-		}, siteNekosLife},
-		"poke": {"Poke", "poke", []string{
-			"${0} poked ${1}",
-		}, siteNekosLife},
+	interactionsMap = map[string]interaction{
+		"kiss": {
+			Noun: "Kiss",
+			URL:  "kiss",
+			Responses: []string{
+				"${0} kissed ${1}",
+			},
+			Site: siteNekosLife,
+		},
+		"slap": {
+			Noun: "Slap",
+			URL:  "slap",
+			Responses: []string{
+				"${0} slapped ${1}",
+			},
+			Site: siteNekosLife,
+		},
+		"cuddle": {
+			Noun: "Cuddle",
+			URL:  "cuddle",
+			Responses: []string{
+				"${0} cuddled ${1}",
+				"${0} snuggled up to ${1}",
+			},
+			Site: siteNekosLife,
+		},
+		"hug": {
+			Noun: "Hug",
+			URL:  "hug",
+			Responses: []string{
+				"${0} hugged ${1}",
+				"${0} wrapped their arms around ${1} and hugged them",
+			},
+			Site: siteNekosLife,
+		},
+		"spank": {
+			Noun: "Spank",
+			URL:  "spank",
+			Responses: []string{
+				"${0} spanked ${1}",
+				"${1} got their ass spanked by ${0}",
+				"${0} beat ${1}'s ass",
+			},
+			Site: siteNekosLife,
+		},
+		"bj": {
+			Noun: "Give some head to",
+			URL:  "bj",
+			Responses: []string{
+				"${0} gave ${1} same top",
+				"${0} sucked off ${1}",
+			},
+			Site: siteNekosLife,
+		},
+		"anal": {
+			Noun: "Give some head to",
+			URL:  "anal",
+			Responses: []string{
+				"${0} tore apart ${1}'s ass",
+				"${0} put their dick in ${1}'s ass",
+			},
+			Site: siteNekosLife,
+		},
+		"tickle": {
+			Noun: "Tickle",
+			URL:  "tickle",
+			Responses: []string{
+				"${0} tickled ${1}",
+			},
+			Site: siteNekosLife,
+		},
+		"pat": {
+			Noun: "Pat",
+			URL:  "pat",
+			Responses: []string{
+				"${0} patted ${1}",
+				"${0} gave ${1} some head pats",
+			},
+			Site: siteNekosLife,
+		},
+		"feed": {
+			Noun: "Feed",
+			URL:  "feed",
+			Responses: []string{
+				"${0} fed ${1} some food",
+				"${0} fed ${1}",
+				"${0} shoved some food down ${1}'s throat",
+			},
+			Site: siteNekosLife,
+		},
+		"poke": {
+			Noun: "Poke",
+			URL:  "poke",
+			Responses: []string{
+				"${0} poked ${1}",
+			},
+			Site: siteNekosLife,
+		},
 	}
 )
 
-func interaction(c *kdgr.Context) {
+func interactionFunc(c *router.Context) {
 	var user *discordgo.User
+	var err error
+
 	if len(c.Args) == 0 {
-		chnl, err := c.Ses.State.Channel(c.Msg.ChannelID)
-		if err == nil {
+		var chnl *discordgo.Channel
+		if chnl, err = c.Ses.State.Channel(c.Msg.ChannelID); err == nil {
 			if len(chnl.Recipients) == 1 {
 				user = chnl.Recipients[0]
 			}
@@ -85,64 +142,89 @@ func interaction(c *kdgr.Context) {
 			c.ReplyInvalidArg(0, "Invalid user specified.")
 			return
 		}
-	} else {
-		var err error
-		user, err = c.Args.Get(0).AsUser(c.Ses)
-		if err != nil {
-			c.ReplyInvalidArg(0, "Invalid user specified.")
-			return
-		}
+	} else if user, err = c.Args.Get(0).AsUser(c.Ses); err != nil {
+		c.ReplyInvalidArg(0, "Invalid user specified.")
+		return
 	}
 
 	inter := interactionsMap[c.Route.Name]
-	var url string
+
+	var imgURL string
 	switch inter.Site { //nolint:gocritic // More will come in future
 	case siteNekosLife:
 		{
 			req := fasthttp.AcquireRequest()
 			resp := fasthttp.AcquireResponse()
 
-			req.SetRequestURIBytes([]byte(format.Formatp("https://nekos.life/api/v2/img/${}", inter.URL)))
+			url := format.Formatp(
+				"https://nekos.life/api/v2/img/${}",
+				inter.URL,
+			)
+
+			req.SetRequestURIBytes([]byte(url))
 			req.Header.SetMethodBytes([]byte("GET"))
 
-			err := fasthttp.Do(req, resp)
-			if err != nil {
-				c.ReplyAutoHandle(kdgr.NewError(format.Formatp("Unable to get image: ${}", err)))
+			if fasthttp.Do(req, resp) != nil {
+				msgErr := router.NewError(format.Formatp(
+					"Unable to get image: ${}",
+					err,
+				))
+				c.ReplyAutoHandle(msgErr)
+
 				return
 			}
 			bodyStr := resp.Body()
-
 			fasthttp.ReleaseResponse(resp)
+
 			var resMap map[string]json.RawMessage
-			err = json.Unmarshal(bodyStr, &resMap)
-			if err != nil {
-				c.ReplyAutoHandle(kdgr.NewError(format.Formatp("Unable to unmarshal response: ${}", err)))
+			if json.Unmarshal(bodyStr, &resMap) != nil {
+				msgErr := router.NewError(format.Formatp(
+					"Unable to unmarshal response: ${}",
+					err,
+				))
+				c.ReplyAutoHandle(msgErr)
+
 				return
 			}
 
-			err = json.Unmarshal(resMap["url"], &url)
-			if err != nil {
-				c.ReplyAutoHandle(kdgr.NewError(format.Formatp("Unable to unmarshal URL from response: ${}", err)))
+			if json.Unmarshal(resMap["url"], &imgURL) != nil {
+				msgErr := router.NewError(format.Formatp(
+					"Unable to unmarshal URL from response: ${}",
+					err,
+				))
+				c.ReplyAutoHandle(msgErr)
+
 				return
 			}
 		}
 	}
 
-	msg := kdgr.NewMessage(inter.Noun).
-		Desc(format.Formatp(inter.Responses[rand.Intn(len(inter.Responses))], c.Msg.Author.Mention(), user.Mention())).
-		Image(url)
+	response := inter.Responses[rand.Intn(len(inter.Responses))]
+
+	msg := router.NewMessage(inter.Noun)
+	msg.Desc(format.Formatp(
+		response,
+		c.Msg.Author.Mention(),
+		user.Mention(),
+	))
+	msg.Image(imgURL)
 
 	c.ReplyAutoHandle(msg)
 }
 
-func LoadInteractions(r *kdgr.Route) {
-	r.Group(func(r *kdgr.Route) {
+func LoadInteractions(r *router.Route) {
+	r.Group(func(r *router.Route) {
 		r.Cat("Interactions")
 
 		for name, inter := range interactionsMap {
-			r.On(name, interaction).
-				Desc(format.Formatp("${} a user", inter.Noun)).
-				Arg("user", format.Formatp("The user to ${}", strings.ToLower(inter.Noun)), false, kdgr.RouteArgUser)
+			argDesc := format.Formatp(
+				"The user to ${}",
+				strings.ToLower(inter.Noun),
+			)
+
+			cmd := r.On(name, interactionFunc)
+			cmd.Desc(format.Formatp("${} a user.", inter.Noun))
+			cmd.Arg("user", argDesc, false, router.ArgUser)
 		}
 	})
 }
